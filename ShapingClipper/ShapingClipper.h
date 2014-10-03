@@ -49,7 +49,7 @@ class ShapingClipper
   std::vector<double> inFrame, outFrame, marginCurve;
 
   /**
-   *  Generates a basic psychoacoustic curve based on the equal loudness contour.
+   *  Generates a basic psychoacoustic curve.
    *  marginCurve is in dB and represents the minimum level difference between
    *  the clean input and the clipping distortion at each frequency
    */
