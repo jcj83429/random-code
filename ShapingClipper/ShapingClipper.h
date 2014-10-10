@@ -49,7 +49,7 @@ class ShapingClipper
   std::vector<double> inFrame, outFrame, marginCurve;
 
   /**
-   *  Generates a basic psychoacoustic curve.
+   *  Generates a basic psychoacoustic curve based on the equal loudness contour.
    *  marginCurve is in dB and represents the minimum level difference between
    *  the clean input and the clipping distortion at each frequency
    */
@@ -63,15 +63,15 @@ class ShapingClipper
 
   /**
    *  Clips the windowedFrame to the window scaled by the clipLevel
+   *  The existing values in clippingDelta is applied to the windowedFrame
+   *  to get the effective sample values, taking previous clipping iterations
+   *  into account.
    *  Should only be used with windowed input
    */
   void clipToWindow(const double* windowedFrame, double* clippingDelta);
 
   /**
-   *  Calculates the original signal level considering the masking of
-   *  higher frequencies by lower frequencies.
-   *  Does not take into account the masking of lower frequenciew by higher
-   *  frequencies as this effect is weaker.
+   *  Calculates the original signal level considering psychoacoustic masking
    */
   void calculateMaskCurve(const Aquila::SpectrumType &spectrum, double* maskCurve);
 

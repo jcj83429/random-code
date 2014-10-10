@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     Aquila::FramesCollection frmsR(wavR, feedSize);
 
     std::ofstream outfile;
-    outfile.open(argv[2], std::ios::out | std::ios::binary);
+    outfile.open(argv[2], std::ios::out | std::ios::app | std::ios::binary);
 
     int frameN = 0;
     while(frameN < frmsL.count()){
@@ -41,10 +41,10 @@ int main(int argc, char* argv[])
       frmArr = frmsR.frame(frameN).toArray();
       clipperR.feed(frmArr, outBufR);
 
-      if(frameN > 3){
+      if(frameN > 2){
 	for(int i = 0; i < feedSize; i++){
-	  out16[2*i] = outBufL[i];
-	  out16[2*i+1] = outBufR[i];
+	  out16[2*i] = (outBufL[i] > 32766 ? 32766 : (outBufL[i] < -32766 ? -32766 : outBufL[i]));
+	  out16[2*i+1] = (outBufR[i] > 32766 ? 32766 : (outBufR[i] < -32766 ? -32766 : outBufR[i]));
 	}
 	
 	outfile.write((const char*)out16, feedSize*2*2);

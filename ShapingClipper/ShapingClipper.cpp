@@ -45,16 +45,23 @@ void ShapingClipper::feed(const double* inSamples, double* outSamples){
   double maskCurve[this->size/2 + 1];
   calculateMaskCurve(origSpectrum, maskCurve);
 
-  for(int i=0; i<2; i++){
+  for(int i=0; i<this->size; i++)
+    clippingDelta[i] = 0;
+
+  for(int i=0; i<4; i++){
+
     clipToWindow(windowedFrame, clippingDelta);  
     Aquila::SpectrumType clipSpectrum = this->fft->fft(clippingDelta);
    
     limitClipSpectrum(clipSpectrum, maskCurve);
     
     this->fft->ifft(clipSpectrum, clippingDelta);
-    for(int j = 0; j < this->size; j++)
-      windowedFrame[j] += clippingDelta[j];
+
   }
+
+  for(int i=0; i<this->size; i++)
+    windowedFrame[i] += clippingDelta[i];
+
   applyWindow(windowedFrame, this->outFrame.data(), true); //overlap & add
   
   for(int i = 0; i < this->overlap; i++)
@@ -63,8 +70,12 @@ void ShapingClipper::feed(const double* inSamples, double* outSamples){
 }
 
 void ShapingClipper::generateMarginCurve(){
-  int points[][2] = {{0,-30}, {2000,-30}, {4000,-20}, {6000,-20}, {10000,-30}, {16000,-30}, {17000,-1000}};
-  int numPoints = 7;
+  // the normal curve trashes frequencies above 16khz (because I can't hear it...but some people might)
+  int points[][2] = {{0,0}, {500,35}, {2000,40}, {4000,35}, {6000,30}, {10000,30}, {16000,30}, {17000,-1000}}; //normal
+  // the FM curve puts more distortion in the high frequencies to take advantage of pre/de-emphasis.
+  // it also removes all distortion above 16khz as required by the FM stereo standard.
+  //int points[][2] = {{0,-100}, {500,-30}, {2000,-35}, {5000,-40}, {8000,-50}, {12000,-60}, {16000,-70}, {17000,1000}}; //FM, curretnly broken
+  int numPoints = 8;
   this->marginCurve[0] = points[0][1];
   
   int j = 0;
@@ -93,13 +104,12 @@ void ShapingClipper::applyWindow(const double* inFrame, double* outFrame, const 
 void ShapingClipper::clipToWindow(const double* windowedFrame, double* clippingDelta){
   const double* window = this->window->toArray();
   for(int i = 0; i < this->size; i++){
-    int limit = this->clipLevel * window[i];
-    if(windowedFrame[i] > limit)
-      clippingDelta[i] = limit - windowedFrame[i];
-    else if(windowedFrame[i] < -limit)
-      clippingDelta[i] = -limit - windowedFrame[i];
-    else
-      clippingDelta[i] = 0;
+    double limit = this->clipLevel * window[i];
+    double effectiveValue = windowedFrame[i] + clippingDelta[i];
+    if(effectiveValue > limit)
+      clippingDelta[i] += limit - effectiveValue;
+    else if(effectiveValue < -limit)
+      clippingDelta[i] += -limit - effectiveValue;
   }
 }
 
@@ -110,10 +120,17 @@ void ShapingClipper::calculateMaskCurve(const Aquila::SpectrumType &spectrum, do
   for(int j = 0; j < this->maskSpill; j++)
     maskCurve[0+j] += abs(spectrum[0]) / (j*128/this->size + 1);
   for(int i = 1; i < this->size / 2; i++){
+    // upward spill
     for(int j = 0; j < this->maskSpill; j++){
       int idx = i+j;
       idx = (idx > this->size / 2 ? this->size / 2 : idx);
       maskCurve[idx] += (abs(spectrum[i]) + abs(spectrum[this->size - i])) / (j*128/this->size + 1);
+    }
+    // downward spill
+    for(int j = 1; j < this->maskSpill / 2; j++){
+      int idx = i-j;
+      idx = (idx < 0 ? 0 : idx);
+      maskCurve[idx] += (abs(spectrum[i]) + abs(spectrum[this->size - i])) / (j*256/this->size + 1);
     }
   }
   maskCurve[this->size / 2] += abs(spectrum[this->size / 2]);
@@ -125,7 +142,7 @@ void ShapingClipper::limitClipSpectrum(Aquila::SpectrumType &clipSpectrum, const
   if(relativeDistortionLevel > 0)
     clipSpectrum[0] *= pow(10, -relativeDistortionLevel / 20);
   for(int i = 1; i < this->size / 2; i++){
-    relativeDistortionLevel = (Aquila::dB(abs(clipSpectrum[i])) + Aquila::dB(abs(clipSpectrum[this->size - i])) ) - (Aquila::dB(maskCurve[i]) - marginCurve[i]);
+    relativeDistortionLevel = Aquila::dB(abs(clipSpectrum[i]) + abs(clipSpectrum[this->size - i])) - (Aquila::dB(maskCurve[i]) - marginCurve[i]);
     if(relativeDistortionLevel > 0){
       clipSpectrum[i] *= pow(10, -relativeDistortionLevel / 20);
       clipSpectrum[this->size - i] *= pow(10, -relativeDistortionLevel / 20);
