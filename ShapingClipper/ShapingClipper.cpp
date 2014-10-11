@@ -5,7 +5,7 @@ ShapingClipper::ShapingClipper(int sampleRate, int fftSize, int clipLevel){
   this->size = fftSize;
   this->clipLevel = clipLevel;
   this->overlap = fftSize/4;
-  this->maskSpill = fftSize/32;
+  this->maskSpill = fftSize/64;
   this->fft = Aquila::FftFactory::getFft(fftSize);
 
   this->window = new Aquila::HannWindow(fftSize);
@@ -71,10 +71,10 @@ void ShapingClipper::feed(const double* inSamples, double* outSamples){
 
 void ShapingClipper::generateMarginCurve(){
   // the normal curve trashes frequencies above 16khz (because I can't hear it...but some people might)
-  int points[][2] = {{0,0}, {500,35}, {2000,40}, {4000,35}, {6000,30}, {10000,30}, {16000,30}, {17000,-1000}}; //normal
+  int points[][2] = {{0,0}, {500,40}, {2000,40}, {4000,35}, {6000,30}, {12000,30}, {16000,25}, {17000,-1000}}; //normal
   // the FM curve puts more distortion in the high frequencies to take advantage of pre/de-emphasis.
   // it also removes all distortion above 16khz as required by the FM stereo standard.
-  //int points[][2] = {{0,-100}, {500,-30}, {2000,-35}, {5000,-40}, {8000,-50}, {12000,-60}, {16000,-70}, {17000,1000}}; //FM, curretnly broken
+  //int points[][2] = {{0,-100}, {100,-50}, {200,40}, {3000,40}, {7000,20}, {12000,-30}, {16000,-100}, {17000,1000}}; //FM
   int numPoints = 8;
   this->marginCurve[0] = points[0][1];
   
