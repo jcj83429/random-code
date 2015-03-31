@@ -1,11 +1,17 @@
-<!-- adds get mp3 link -->
 <script type="text/javascript">
+
+String.prototype.endsWith = function(suffix) {
+    return this.indexOf(suffix, this.length - suffix.length) !== -1;
+};
+
 var fileTable = document.getElementsByTagName("table")[0].children[0];
 
 for(i=3; i<=fileTable.children.length-2; i++){
     var filename = fileTable.children[i].children[1].getElementsByTagName("a")[0].href;
-    if(filename.indexOf('.flac')!=-1 || filename.indexOf('.wav')!=-1){
-        fileTable.children[i].children[4].innerHTML = '<a href="/compress.php?quality=0&direct=1&file='+filename.replace(/\+/g, '%2B')+'">get mp3</a>';
+    if(filename.endsWith('.flac') || filename.endsWith('.ape') || filename.endsWith('.wv') || filename.endsWith('.wav')){
+        filename = filename.replace(/\+/g, '%2B');
+        filename = filename.replace(/\&/g, '%26');
+        fileTable.children[i].children[4].innerHTML = '<a href="/compress.php?quality=0&direct=1&file='+filename+'">get mp3</a>';
     }
 }
 </script>
