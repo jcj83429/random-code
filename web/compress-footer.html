@@ -1,3 +1,5 @@
+<table><tr id='compressOptions'></tr></table>
+
 <script type="text/javascript">
 
 String.prototype.endsWith = function(suffix) {
@@ -6,14 +8,59 @@ String.prototype.endsWith = function(suffix) {
 
 var fileTable = document.getElementsByTagName("table")[0].children[0];
 
-for(i=3; i<=fileTable.children.length-2; i++){
-    var filename = fileTable.children[i].children[1].getElementsByTagName("a")[0].href;
-    if(filename.endsWith('.flac') || filename.endsWith('.ape') || filename.endsWith('.wv') || filename.endsWith('.wav')){
-        filename = filename.replace(/\+/g, '%2B');
-        filename = filename.replace(/\&/g, '%26');
-        fileTable.children[i].children[4].innerHTML = '<a href="/compress.php?quality=0&direct=1&file='+filename+'">get mp3</a>';
+var supportedFormats = [
+    ['flac',true],
+    ['ape', true],
+    ['wv',  true],
+    ['wav', true]
+]
+
+if(document.cookie){
+    supportedFormats = JSON.parse(document.cookie);
+}else{
+    document.cookie = JSON.stringify(supportedFormats);
+}
+
+var compressOptions = document.getElementById('compressOptions');
+
+compressOptions.innerHTML += '<td>enabled <i>get mp3</i> formats:&nbsp;&nbsp;&nbsp;&nbsp;</td>';
+for(var i=0; i<supportedFormats.length; i++){
+    compressOptions.innerHTML += '<td width=50>' + supportedFormats[i][0] + '<input id = "check' + supportedFormats[i][0] + '" type="checkbox" ' + (supportedFormats[i][1] ? 'checked' : "") + '></checkbox>';
+}
+compressOptions.innerHTML += '<td><button onclick="saveFormatPreference();">Save</button></td>';
+
+
+function insertCompressLinks(){
+    for(i=3; i<=fileTable.children.length-2; i++){
+        var filename = fileTable.children[i].children[1].getElementsByTagName("a")[0].href;
+        if(isSupportedFormat(filename)){
+            filename = filename.replace(/\+/g, '%2B');
+            filename = filename.replace(/\&/g, '%26');
+            fileTable.children[i].children[4].innerHTML = '<a href="/compress.php?quality=0&direct=1&file='+filename+'">get mp3</a>';
+        }else{
+            fileTable.children[i].children[4].innerHTML = '';
+        }
     }
 }
+
+function isSupportedFormat(filename){
+    for(var i=0; i<supportedFormats.length; i++){
+        if(supportedFormats[i][1] && filename.endsWith('.' + supportedFormats[i][0])){
+            return true;
+        }
+    }
+    return false;
+}
+
+function saveFormatPreference(){
+    for(var i=0; i<supportedFormats.length; i++){
+        supportedFormats[i][1] = document.getElementById('check' + supportedFormats[i][0]).checked;
+    }
+    insertCompressLinks();
+    document.cookie = JSON.stringify(supportedFormats);
+}
+
+insertCompressLinks();
 </script>
 </body>
 </html>
