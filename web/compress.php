@@ -15,14 +15,15 @@ if(isset($_GET["quality"]) && !ctype_digit($_GET["quality"])){
 }
 
 $filename=preg_replace('#http.*usic/#', '', $_GET["file"]);
+$outname=substr(md5(dirname($filename)), 0, 8) . '_' . basename($filename) . '.v' . $_GET["quality"] . '.mp3';
 
 if($filename != '' && false == strpos($filename, '../')){
     $filepath=escapeshellarg("/home/livingroom/Music/" . $filename);
 
-    $ffmpeg_out = shell_exec('ffmpeg -i ' . $filepath . ' -aq ' . escapeshellarg($_GET["quality"]) . ' ' . escapeshellarg('/tmp/php-music-compress-out/' . basename($filename) . '.v' . $_GET["quality"] . '.mp3') . ' 2>&1');
+    $ffmpeg_out = shell_exec('ffmpeg -i ' . $filepath . ' -aq ' . escapeshellarg($_GET["quality"]) . ' ' . escapeshellarg('/tmp/php-music-compress-out/' . $outname) . ' 2>&1');
 }
 if(isset($_GET["direct"])){
-    header('Location: ' . 'compressed/' . basename($filename) . '.v' . $_GET["quality"] . '.mp3');
+    header('Location: ' . 'compressed/' . $outname);
     exit;
 }
 ?>
