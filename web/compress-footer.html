@@ -1,4 +1,9 @@
-<table><tr id='compressOptions'></tr></table>
+<table>
+<!-- putting everything in the js so it won't show up when js is disabled -->
+<tr id='compressInputFormats' bgcolor=#ffeeee></tr>
+<tr id='compressOutputFormat' bgcolor=#eeffee></tr>
+<tr id='compressQuality' bgcolor=#eeeeff></tr>
+</table>
 
 <script type="text/javascript">
 
@@ -6,29 +11,89 @@ String.prototype.endsWith = function(suffix) {
     return this.indexOf(suffix, this.length - suffix.length) !== -1;
 };
 
+function saveSettings(){
+    document.cookie = "settings=" + JSON.stringify({"supportedFormats":supportedFormats, "quality":quality, "format":format}) + ";path=/";
+}
+
+function getCookie(c_name) {
+    if (document.cookie.length > 0) {
+        c_start = document.cookie.indexOf(c_name + "=");
+        if (c_start != -1) {
+            c_start = c_start + c_name.length + 1;
+            c_end = document.cookie.indexOf(";", c_start);
+            if (c_end == -1) c_end = document.cookie.length;
+            return unescape(document.cookie.substring(c_start, c_end));
+        }
+    }
+    return "";
+}
+
+function deleteAllCookies() {
+    var cookies = document.cookie.split(";");
+
+    for (var i = 0; i < cookies.length; i++) {
+			var cookie = cookies[i];
+			var eqPos = cookie.indexOf("=");
+			var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+    }
+}
+
+
+
 var fileTable = document.getElementsByTagName("table")[0].children[0];
 
 var supportedFormats = [
     ['flac',true],
     ['ape', true],
     ['wv',  true],
-    ['wav', true]
-]
+    ['wav', true],
+    ['wma', true],
+    ['m4a', false],
+    ['ogg', false],
+    ['opus',false],
+    ['dts', true],
+];
 
-if(document.cookie){
-    supportedFormats = JSON.parse(document.cookie);
-}else{
-    document.cookie = JSON.stringify(supportedFormats);
+var quality = 2;
+var format = "mp3";
+
+try{
+    var savedSettings = JSON.parse(getCookie("settings"));
+    var savedSupportedFormats = savedSettings['supportedFormats'];
+    if(savedSupportedFormats != undefined && savedSupportedFormats.length == supportedFormats.length){ //no new formats added
+        supportedFormats = savedSupportedFormats;
+    }
+    var savedQuality = savedSettings['quality'];
+    if(savedQuality != undefined){
+        quality = savedQuality;
+    }
+    var savedFormat = savedSettings['format'];
+    if(savedFormat != undefined){
+        format = savedFormat;
+    }
+}catch(e){
+    console.log("reset to default");
+    deleteAllCookies();
+    saveSettings();
 }
 
-var compressOptions = document.getElementById('compressOptions');
+saveSettings();
 
-compressOptions.innerHTML += '<td>enabled <i>get mp3</i> formats:&nbsp;&nbsp;&nbsp;&nbsp;</td>';
+var compressInputFormats = document.getElementById('compressInputFormats');
+compressInputFormats.innerHTML += '<td>enabled <i>get compressed</i> input formats:&nbsp;&nbsp;&nbsp;&nbsp;</td>';
 for(var i=0; i<supportedFormats.length; i++){
-    compressOptions.innerHTML += '<td width=50>' + supportedFormats[i][0] + '<input id = "check' + supportedFormats[i][0] + '" type="checkbox" ' + (supportedFormats[i][1] ? 'checked' : "") + '></checkbox>';
+    compressInputFormats.innerHTML += '<td width=60>' + supportedFormats[i][0] + '<input id = "check' + supportedFormats[i][0] + '" type="checkbox" ' + (supportedFormats[i][1] ? 'checked' : "") + '></checkbox>';
 }
-compressOptions.innerHTML += '<td><button onclick="saveFormatPreference();">Save</button></td>';
+compressInputFormats.innerHTML += '<td width=100 align=center rowspan=3 bgcolor=#f8f8f8><button onclick="saveFormatPreference();">Save</button></td>';
 
+var compressOutputFormat = document.getElementById('compressOutputFormat');
+compressOutputFormat.innerHTML += '<td>output format: </td><td colspan=9><select id="selectOutputFormat"><option value="mp3">mp3</option><option value="ogg" selected>ogg</option><option value="opus">opus</option></select></td>';
+document.getElementById("selectOutputFormat").value = format;
+
+var compressQuality = document.getElementById('compressQuality');
+compressQuality.innerHTML += '<td>quality: </td><td colspan=9><select id="selectQuality"><option value="0">V0</option><option value="2">V2</option><option value="4">V4</option><option value="6">V6</option><option value="8">V8</option></select></td>';
+document.getElementById("selectQuality").value = quality;
 
 function insertCompressLinks(){
     for(i=3; i<=fileTable.children.length-2; i++){
@@ -36,7 +101,7 @@ function insertCompressLinks(){
         if(isSupportedFormat(filename)){
             filename = filename.replace(/\+/g, '%2B');
             filename = filename.replace(/\&/g, '%26');
-            fileTable.children[i].children[4].innerHTML = '<a href="/compress.php?quality=0&direct=1&file='+filename+'">get mp3</a>';
+            fileTable.children[i].children[4].innerHTML = '<a href="/compress.php?format='+format+'&quality='+quality+'&direct=1&file='+filename+'">get compressed</a>';
         }else{
             fileTable.children[i].children[4].innerHTML = '';
         }
@@ -56,8 +121,10 @@ function saveFormatPreference(){
     for(var i=0; i<supportedFormats.length; i++){
         supportedFormats[i][1] = document.getElementById('check' + supportedFormats[i][0]).checked;
     }
+    format = document.getElementById("selectOutputFormat").value;
+    quality = document.getElementById("selectQuality").value;
     insertCompressLinks();
-    document.cookie = JSON.stringify(supportedFormats);
+    saveSettings();
 }
 
 insertCompressLinks();
