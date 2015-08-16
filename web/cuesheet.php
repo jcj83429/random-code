@@ -6,6 +6,7 @@ function parseCue($cuefp){
     $albumPerformer = '';
     $lastFile = null;
     $tracksStarted = false;
+    $trackForCurrentWav = 0;
     $firstTrack = true;
     $indexTime = 0.0;
     while(($line = fgets($cuefp, 4096)) !== false){
@@ -23,26 +24,34 @@ function parseCue($cuefp){
             } // ignore album title
         }else if(preg_match('/FILE.*"([^"]*)"/i', $line, $matches)){
             $lastFile = $matches[1];
+            $trackForCurrentWav = 0;
         }else if(preg_match('/INDEX 01.*(\d\d):(\d\d):(\d\d)/i', $line, $matches)){
             $indexTime = intval($matches[1])*60 + intval($matches[2]) + intval($matches[3])/75;
             $currentTrackInfo['start'] = $indexTime;
             $currentTrackInfo['FILE'] = $lastFile;
-            if(!$firstTrack){
+            if($trackForCurrentWav > 1){
                 $lastTrackInfo['duration'] = $indexTime - $lastTrackInfo['start'];
-                if(!array_key_exists('PERFORMER', $lastTrackInfo)){
-                    $lastTrackInfo['PERFORMER'] = $albumPerformer;
-                }
-                //var_dump($lastTrackInfo);echo '<br>';
-                $cueInfo[] = $lastTrackInfo;
             }
-            $lastTrackInfo = $currentTrackInfo;
+            if(!$firstTrack){
+                $cueInfo[] = $lastTrackInfo;
+                //var_dump($lastTrackInfo);echo '<br>';
+            }
             $firstTrack = false;
         }else if(preg_match('/TRACK (\d\d) AUDIO/i', $line, $matches)){
+            if(!firstTrack && !array_key_exists('PERFORMER', $currentTrackInfo)){
+                $currentTrackInfo['PERFORMER'] = $albumPerformer;
+            }
+            $lastTrackInfo = $currentTrackInfo;
+            $currentTrackInfo = array();
+            $trackForCurrentWav += 1;
             $currentTrackInfo['TRACK'] = $matches[1];
             $tracksStarted = true;
         }else{
             //echo $line.' UNKNOWN<br>';
         }
+    }
+    if(!array_key_exists('PERFORMER', $currentTrackInfo)){
+        $currentTrackInfo['PERFORMER'] = $albumPerformer;
     }
     $cueInfo[] = $currentTrackInfo;
     return $cueInfo;
