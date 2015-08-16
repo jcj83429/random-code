@@ -80,6 +80,7 @@ if(!isset($_GET["quality"]) || (strlen($_GET["quality"]) != 1 || !ctype_digit($_
 
 <html>
 <head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>cuesheet</title>
 </head>
 <body>
