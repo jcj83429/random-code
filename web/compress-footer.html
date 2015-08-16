@@ -88,7 +88,7 @@ for(var i=0; i<supportedFormats.length; i++){
 compressInputFormats.innerHTML += '<td width=100 align=center rowspan=3 bgcolor=#f8f8f8><button onclick="saveFormatPreference();">Save</button></td>';
 
 var compressOutputFormat = document.getElementById('compressOutputFormat');
-compressOutputFormat.innerHTML += '<td>output format: </td><td colspan=9><select id="selectOutputFormat"><option value="mp3">mp3</option><option value="ogg" selected>ogg</option><option value="opus">opus</option></select></td>';
+compressOutputFormat.innerHTML += '<td>output format: </td><td colspan=9><select id="selectOutputFormat"><option value="mp3">mp3</option><option value="mp3-fast">mp3 (faster, less efficient)</option><option value="ogg" selected>ogg</option><option value="opus">opus</option><option value="opus-fast">opus (faster, less efficient)</option></select></td>';
 document.getElementById("selectOutputFormat").value = format;
 
 var compressQuality = document.getElementById('compressQuality');
@@ -98,10 +98,12 @@ document.getElementById("selectQuality").value = quality;
 function insertCompressLinks(){
     for(i=3; i<=fileTable.children.length-2; i++){
         var filename = fileTable.children[i].children[1].getElementsByTagName("a")[0].href;
+        filename = filename.replace(/\+/g, '%2B');
+        filename = filename.replace(/\&/g, '%26');
         if(isSupportedFormat(filename)){
-            filename = filename.replace(/\+/g, '%2B');
-            filename = filename.replace(/\&/g, '%26');
             fileTable.children[i].children[4].innerHTML = '<a href="/compress.php?format='+format+'&quality='+quality+'&direct=1&file='+filename+'">get compressed</a>';
+        }else if(filename.endsWith('.cue')){
+            fileTable.children[i].children[4].innerHTML = '<a href="/cuesheet.php?format='+format+'&quality='+quality+'&file='+filename+'">open cuesheet</a>';
         }else{
             fileTable.children[i].children[4].innerHTML = '';
         }

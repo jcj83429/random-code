@@ -14,29 +14,68 @@ if(isset($_GET["quality"]) && (strlen($_GET["quality"]) != 1 || !ctype_digit($_G
     exit;
 }
 
+if(isset($_GET["start"]) && (false == is_numeric($_GET["start"]) || floatval($_GET["start"]) < 0)){
+    echo "invalid";
+    exit;
+}
+
+if(isset($_GET["duration"]) && (false == is_numeric($_GET["duration"]) || floatval($_GET["duration"]) < 0)){
+    echo "invalid";
+    exit;
+}
+
 $filename=preg_replace('#http.*usic/#', '', $_GET["file"]);
-$outname=substr(md5(dirname($filename)), 0, 8) . '_' . basename($filename) . '.v' . $_GET["quality"];
+$outname=substr(md5(dirname($filename)), 0, 8) . '_' . basename($filename);
+
+$start_params='';
+if(isset($_GET["start"])){
+    $outname=$outname . '.ss' . intval($_GET["start"]);
+    $start_params='-ss ' . $_GET["start"];
+}
+
+$duration_params='';
+if(isset($_GET["duration"])){
+    $duration_params='-t ' . $_GET["duration"];
+}
 
 if(isset($_GET["format"]) && isset($_GET["quality"])){
     switch($_GET["format"]){
         case "mp3":
-            $outname=$outname . '.mp3';
-            $quality_params='-aq ' . escapeshellarg($_GET["quality"]);
+            $outname=$outname . '.v' . $_GET["quality"] . '.mp3';
+            $quality_params='-aq ' . $_GET["quality"];
+            break;
+        case "mp3-fast":
+            $outname=$outname . '.v' . $_GET["quality"] . 'fast.mp3';
+            $quality_params='-aq ' . $_GET["quality"] . ' -compression_level 9';
             break;
         case "ogg":
-            $outname=$outname . '.ogg';
-            $quality_params='-aq ' . escapeshellarg($_GET["quality"]) . ' -vn';
+            $outname=$outname . '.v' . $_GET["quality"] . '.ogg';
+            $quality_params='-aq ' . $_GET["quality"] . ' -vn';
             break;
         case "opus":
-            $outname=$outname . '.opus';
-            $quality_params='-b:a ' . strval((intval($_GET["quality"]) + 1) * 32) . 'k';
+            $outname=$outname . '.v' . $_GET["quality"] . '.opus';
+            $quality=intval($_GET["quality"]);
+            // hack: convert quality level to vbr target bitrate
+            if($quality == 0){
+                $quality=1;
+            }
+            $quality_params='-b:a ' . strval($quality * 32) . 'k';
+            break;
+        case "opus-fast":
+            $outname=$outname . '.v' . $_GET["quality"] . 'fast.opus';
+            $quality=intval($_GET["quality"]);
+            // hack: convert quality level to vbr target bitrate
+            if($quality == 0){
+                $quality=1;
+            }
+            $quality_params='-b:a ' . strval($quality * 32) . 'k' . ' -compression_level 0';
             break;
         default:
             echo "invalid";
             exit;
     }
 }else{
-    $outname=$outname . '.mp3';
+    $outname=$outname . '.v2.mp3';
     $quality_params='-aq 2';
 }
 
@@ -44,7 +83,7 @@ if(isset($_GET["format"]) && isset($_GET["quality"])){
 if($filename != '' && false == strpos($filename, '../')){
     $filepath=escapeshellarg("/home/livingroom/Music/" . $filename);
 
-    $ffmpeg_out = shell_exec('ffmpeg -i ' . $filepath . ' ' . $quality_params . ' ' . escapeshellarg('/tmp/php-music-compress-out/' . $outname) . ' 2>&1');
+    $ffmpeg_out = shell_exec('ffmpeg ' . $start_params . ' -i ' . $filepath . ' ' . $duration_params . ' ' . $quality_params . ' ' . escapeshellarg('/tmp/php-music-compress-out/' . $outname) . ' 2>&1');
 }
 if(isset($_GET["direct"])){
     header('Location: ' . 'compressed/' . $outname);
@@ -61,8 +100,10 @@ if(isset($_GET["direct"])){
   Input File: <input type="text" name="file"><br>
   Format: <select name="format">
     <option value="mp3" selected>mp3</option>
+    <option value="mp3-fast" selected>mp3 (faster, less efficient)</option>
     <option value="ogg">ogg vorbis</option>
     <option value="opus">opus</option>
+    <option value="opus-fast">opus (faster, less efficient)</option>
   </select><br>
   Quality: <select name="quality">
     <option value="0">V0</option>
