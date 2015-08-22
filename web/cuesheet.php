@@ -59,7 +59,7 @@ function parseCue($cuefp){
 
 setlocale(LC_ALL, 'C.UTF-8');
 
-$filename=preg_replace('#http.*usic/#', '', $_GET["file"]);
+$filename=preg_replace('#http.*?usic/#', '', $_GET["file"]);
 
 if($filename != '' && false == strpos($filename, '../') && strcasecmp(substr($filename, strlen($filename) - strlen('.cue')),'.cue') == 0){
     $filepath="/home/livingroom/Music/" . $filename;
@@ -101,7 +101,14 @@ if($filename == ''){
         echo '<td>'.$track['TRACK'].'</td>';
         echo '<td>'.$track['PERFORMER'].'</td>';
         echo '<td>'.$track['TITLE'].'</td>';
-        echo '<td>'. sprintf('%02d', $track['duration']/60) .':'. sprintf('%02d', $track['duration']%60) .'</td>';
+
+        echo '<td>';
+        if(array_key_exists('duration', $track)){
+            echo sprintf('%02d:%02d', $track['duration']/60, $track['duration']%60);
+        }else{
+            echo '?';
+        }
+        echo '</td>';
 
         echo '<td><a href="'.'/compress.php?file='.rawurlencode(dirname($_GET["file"]).'/'.$track['FILE']).'&direct=1&start='.$track['start'];
         if(array_key_exists('duration', $track)){

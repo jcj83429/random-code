@@ -24,7 +24,7 @@ if(isset($_GET["duration"]) && (false == is_numeric($_GET["duration"]) || floatv
     exit;
 }
 
-$filename=preg_replace('#http.*usic/#', '', $_GET["file"]);
+$filename=preg_replace('#http.*?usic/#', '', $_GET["file"]);
 $outname=substr(md5(dirname($filename)), 0, 8) . '_' . basename($filename);
 
 $start_params='';
