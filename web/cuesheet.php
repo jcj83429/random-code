@@ -106,7 +106,7 @@ if($filename != '' && false == strpos($filename, '../') && strcasecmp(substr($fi
 }
 
 $passFormatQuality = true;
-if(!isset($_GET["format"]) || ($_GET["format"] != 'mp3' && $_GET["format"] != 'mp3-fast' && $_GET["format"] != 'ogg' && $_GET["format"] != 'opus' && $_GET["format"] != 'opus-fast')){
+if(!isset($_GET["format"]) || ($_GET["format"] != 'mp3' && $_GET["format"] != 'ogg' && $_GET["format"] != 'opus')){
     $passFormatQuality = false;
 }
 if(!isset($_GET["quality"]) || (strlen($_GET["quality"]) != 1 || !ctype_digit($_GET["quality"]))){

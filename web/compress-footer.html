@@ -44,6 +44,7 @@ function deleteAllCookies() {
 var fileTable = document.getElementsByTagName("table")[0].children[0];
 
 var supportedFormats = [
+    ['mp3', false],
     ['flac',true],
     ['ape', true],
     ['wv',  true],
@@ -88,11 +89,11 @@ for(var i=0; i<supportedFormats.length; i++){
 compressInputFormats.innerHTML += '<td width=100 align=center rowspan=3 bgcolor=#f8f8f8><button onclick="saveFormatPreference();">Save</button></td>';
 
 var compressOutputFormat = document.getElementById('compressOutputFormat');
-compressOutputFormat.innerHTML += '<td>output format: </td><td colspan=9><select id="selectOutputFormat"><option value="mp3">mp3</option><option value="mp3-fast">mp3 (faster, less efficient)</option><option value="ogg" selected>ogg</option><option value="opus">opus</option><option value="opus-fast">opus (faster, less efficient)</option></select></td>';
+compressOutputFormat.innerHTML += '<td>output format: </td><td colspan=10><select id="selectOutputFormat"><option value="mp3">mp3</option><option value="ogg" selected>ogg</option><option value="opus">opus</option></select></td>';
 document.getElementById("selectOutputFormat").value = format;
 
 var compressQuality = document.getElementById('compressQuality');
-compressQuality.innerHTML += '<td>quality: </td><td colspan=9><select id="selectQuality"><option value="0">V0</option><option value="2">V2</option><option value="4">V4</option><option value="6">V6</option><option value="8">V8</option></select></td>';
+compressQuality.innerHTML += '<td>quality: </td><td colspan=10><select id="selectQuality"><option value="0">V0</option><option value="2">V2</option><option value="4">V4</option><option value="6">V6</option><option value="8">V8</option></select></td>';
 document.getElementById("selectQuality").value = quality;
 
 function insertCompressLinks(){

@@ -45,10 +45,6 @@ if(isset($_GET["format"]) && isset($_GET["quality"])){
             $outname=$outname . '.v' . $_GET["quality"] . '.mp3';
             $quality_params='-aq ' . $_GET["quality"];
             break;
-        case "mp3-fast":
-            $outname=$outname . '.v' . $_GET["quality"] . 'fast.mp3';
-            $quality_params='-aq ' . $_GET["quality"] . ' -compression_level 9';
-            break;
         case "ogg":
             $outname=$outname . '.v' . $_GET["quality"] . '.ogg';
             $quality_params='-aq ' . $_GET["quality"] . ' -vn';
@@ -61,15 +57,6 @@ if(isset($_GET["format"]) && isset($_GET["quality"])){
                 $quality=1;
             }
             $quality_params='-b:a ' . strval($quality * 32) . 'k';
-            break;
-        case "opus-fast":
-            $outname=$outname . '.v' . $_GET["quality"] . 'fast.opus';
-            $quality=intval($_GET["quality"]);
-            // hack: convert quality level to vbr target bitrate
-            if($quality == 0){
-                $quality=1;
-            }
-            $quality_params='-b:a ' . strval($quality * 32) . 'k' . ' -compression_level 0';
             break;
         default:
             echo "invalid";
@@ -101,10 +88,8 @@ if(isset($_GET["direct"])){
   Input File: <input type="text" name="file"><br>
   Format: <select name="format">
     <option value="mp3" selected>mp3</option>
-    <option value="mp3-fast" selected>mp3 (faster, less efficient)</option>
     <option value="ogg">ogg vorbis</option>
     <option value="opus">opus</option>
-    <option value="opus-fast">opus (faster, less efficient)</option>
   </select><br>
   Quality: <select name="quality">
     <option value="0">V0</option>
