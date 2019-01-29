@@ -35,6 +35,7 @@ if(isset($_GET["start"])){
 
 $duration_params='';
 if(isset($_GET["duration"])){
+    $outname=$outname . '.t' . intval($_GET["duration"]);
     $duration_params='-t ' . $_GET["duration"];
 }
 
@@ -81,7 +82,7 @@ if(isset($_GET["format"]) && isset($_GET["quality"])){
 
 
 if($filename != '' && false == strpos($filename, '../')){
-    $filepath=escapeshellarg("/home/livingroom/Music/" . $filename);
+    $filepath=escapeshellarg("/home/archuser/Music/" . $filename);
 
     $ffmpeg_out = shell_exec('ffmpeg ' . $start_params . ' -i ' . $filepath . ' ' . $duration_params . ' ' . $quality_params . ' ' . escapeshellarg('/tmp/php-music-compress-out/' . $outname) . ' 2>&1');
 }
